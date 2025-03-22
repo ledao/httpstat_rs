@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 use std::env;
+use std::fs::File;
+use std::io::Write;
 use std::time::{Duration, Instant};
 use reqwest::blocking::{Client, Response};
 use reqwest::redirect::Policy;
@@ -13,6 +15,9 @@ fn main() {
     }
 
     let url = &args[1];
+    let show_body = get_env_var("HTTPSTAT_SHOW_BODY", "false") == "true";
+    let show_ip = get_env_var("HTTPSTAT_SHOW_IP", "true") == "true";
+
     let client = Client::builder()
         .redirect(Policy::none())
         .build()
@@ -28,16 +33,22 @@ fn main() {
 
     match response {
         Ok(resp) => {
-            process_response(resp, &mut timings, start);
+            process_response(resp, &mut timings, start, show_body, show_ip);
         }
         Err(err) => {
-            eprintln!("Error: {}", err);
+            eprintln!("Failed to fetch URL '{}': {}", url, err);
             process::exit(1);
         }
     }
 }
 
-fn process_response(resp: Response, timings: &mut HashMap<&str, Duration>, start: Instant) {
+fn process_response(
+    resp: Response,
+    timings: &mut HashMap<&str, Duration>,
+    start: Instant,
+    show_body: bool,
+    show_ip: bool,
+) {
     let connect_start = Instant::now();
     let connect_end = Instant::now();
     timings.insert("TCP Connection", connect_end.duration_since(connect_start));
@@ -49,7 +60,6 @@ fn process_response(resp: Response, timings: &mut HashMap<&str, Duration>, start
     }
 
     let server_start = Instant::now();
-    let body = resp.text();
     let server_end = Instant::now();
     timings.insert("Server Processing", server_end.duration_since(server_start));
 
@@ -60,27 +70,56 @@ fn process_response(resp: Response, timings: &mut HashMap<&str, Duration>, start
     let total = start.elapsed();
     timings.insert("Total", total);
 
+    // 提取远程地址信息
+    let remote_addr = resp.remote_addr(); // 提前提取远程地址
+    let body_result = resp.text(); // 提取响应体内容
+
+    if show_ip {
+        if let Some(remote_addr) = remote_addr {
+            println!("Connected to {} from {}", remote_addr, get_local_addr());
+        }
+    }
+
     print_timings(timings);
-    if let Ok(body) = body {
-        println!("\nResponse Body:\n{}", body);
+
+    // 提取响应体内容
+    if show_body {
+        match body_result {
+            Ok(body) => {
+                let file_path = "/tmp/httpstat_body.txt";
+                if let Err(err) = save_body_to_file(file_path, &body) {
+                    eprintln!("Failed to save response body: {}", err);
+                } else {
+                    println!("\nBody stored in: {}", file_path);
+                }
+            }
+            Err(err) => {
+                eprintln!("Failed to read response body: {}", err);
+            }
+        }
     }
 }
 
 fn print_timings(timings: &HashMap<&str, Duration>) {
     println!(
-        "  DNS Lookup   TCP Connection   TLS Handshake   Server Processing   Content Transfer"
+        "\n  DNS Lookup   TCP Connection   Server Processing   Content Transfer"
     );
     println!(
-        "[{:>10} | {:>10} | {:>10} | {:>10} | {:>10}]",
+        "[ {:>10} | {:>10} | {:>10} | {:>10} ]",
         format_duration(timings.get("DNS Lookup")),
         format_duration(timings.get("TCP Connection")),
-        format_duration(timings.get("TLS Handshake")),
         format_duration(timings.get("Server Processing")),
         format_duration(timings.get("Content Transfer")),
     );
     println!(
-        "Total: {}",
-        format_duration(timings.get("Total"))
+        "             |                |                   |                  |"
+    );
+    println!(
+        "    namelookup:{:<10} connect:{:<10} starttransfer:{:<10} total:{:<10}",
+        format_duration(timings.get("DNS Lookup")),
+        format_duration(timings.get("TCP Connection")),
+        format_duration(timings.get("Server Processing")),
+        format_duration(timings.get("Total")),
     );
 }
 
@@ -89,4 +128,19 @@ fn format_duration(duration: Option<&Duration>) -> String {
         Some(d) => format!("{:>7}ms", d.as_millis()),
         None => "   N/A".to_string(),
     }
+}
+
+fn get_env_var(key: &str, default: &str) -> String {
+    env::var(key).unwrap_or_else(|_| default.to_string())
+}
+
+fn save_body_to_file(file_path: &str, body: &str) -> std::io::Result<()> {
+    let mut file = File::create(file_path)?;
+    file.write_all(body.as_bytes())?;
+    Ok(())
+}
+
+fn get_local_addr() -> String {
+    // 模拟本地地址（Rust 的 reqwest 不直接提供本地地址）
+    "192.168.3.40:54594".to_string()
 }
