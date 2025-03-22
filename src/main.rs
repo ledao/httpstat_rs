@@ -2,7 +2,6 @@ use std::collections::HashMap;
 use std::env;
 use std::time::{Duration, Instant};
 use reqwest::blocking::{Client, Response};
-use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::redirect::Policy;
 use std::process;
 
@@ -29,37 +28,41 @@ fn main() {
 
     match response {
         Ok(resp) => {
-            let connect_start = dns_end;
-            let connect_end = Instant::now();
-            timings.insert("TCP Connection", connect_end.duration_since(connect_start));
-
-            if resp.url().scheme() == "https" {
-                let tls_start = connect_end;
-                let tls_end = Instant::now();
-                timings.insert("TLS Handshake", tls_end.duration_since(tls_start));
-            }
-
-            let server_start = Instant::now();
-            let body = resp.text();
-            let server_end = Instant::now();
-            timings.insert("Server Processing", server_end.duration_since(server_start));
-
-            let transfer_start = server_end;
-            let transfer_end = Instant::now();
-            timings.insert("Content Transfer", transfer_end.duration_since(transfer_start));
-
-            let total = start.elapsed();
-            timings.insert("Total", total);
-
-            print_timings(&timings);
-            if let Ok(body) = body {
-                println!("\nResponse Body:\n{}", body);
-            }
+            process_response(resp, &mut timings, start);
         }
         Err(err) => {
             eprintln!("Error: {}", err);
             process::exit(1);
         }
+    }
+}
+
+fn process_response(resp: Response, timings: &mut HashMap<&str, Duration>, start: Instant) {
+    let connect_start = Instant::now();
+    let connect_end = Instant::now();
+    timings.insert("TCP Connection", connect_end.duration_since(connect_start));
+
+    if resp.url().scheme() == "https" {
+        let tls_start = connect_end;
+        let tls_end = Instant::now();
+        timings.insert("TLS Handshake", tls_end.duration_since(tls_start));
+    }
+
+    let server_start = Instant::now();
+    let body = resp.text();
+    let server_end = Instant::now();
+    timings.insert("Server Processing", server_end.duration_since(server_start));
+
+    let transfer_start = server_end;
+    let transfer_end = Instant::now();
+    timings.insert("Content Transfer", transfer_end.duration_since(transfer_start));
+
+    let total = start.elapsed();
+    timings.insert("Total", total);
+
+    print_timings(timings);
+    if let Ok(body) = body {
+        println!("\nResponse Body:\n{}", body);
     }
 }
 
