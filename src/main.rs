@@ -47,7 +47,7 @@ fn main() {
     // Print HTTP response headers
     println!("\nHTTP/1.1 {}", easy.response_code().unwrap_or(0));
     for header in headers {
-        println!("{}", header);
+        print!("{}", header);
     }
 
     // Print timings
