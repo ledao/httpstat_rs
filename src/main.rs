@@ -159,12 +159,6 @@ fn get_env_var(key: &str, default: &str) -> String {
     env::var(key).unwrap_or_else(|_| default.to_string())
 }
 
-fn save_body_to_file(file_path: &str, body: &[u8]) -> std::io::Result<()> {
-    let mut file = File::create(file_path)?;
-    file.write_all(body)?;
-    Ok(())
-}
-
 fn print_headers(headers: &[String], status_code: u32) {
     // 打印状态行
     println!("HTTP/1.1 {}", status_code);
