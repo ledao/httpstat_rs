@@ -2,6 +2,15 @@
 name = "httpstat_rs"
 version = "0.1.0"
 edition = "2021"
+authors = ["ledao <zhaowei153@126.com>"]
+description = "A command-line tool to visualize HTTP requests and responses with timing details."
+license = "MIT"
+repository = "https://github.com/ledao/httpstat_rs"
+homepage = "https://github.com/ledao/httpstat_rs"
+documentation = "https://docs.rs/httpstat_rs"
+keywords = ["http", "cli", "httpstat", "timing", "curl"]
+categories = ["command-line-utilities", "network-programming"]
+readme = "README.md"
 
 [dependencies]
 curl = "0.4"
