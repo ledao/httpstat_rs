@@ -125,7 +125,7 @@ fn collect_timings(easy: &mut Easy) -> HashMap<&'static str, f64> {
 
 fn print_timings(timings: &HashMap<&str, f64>) {
     println!(
-        "\n  DNS Lookup   TCP Connection   TLS Handshake   Server Processing   Content Transfer"
+        "\n   DNS Lookup     TCP Connection     TLS Handshake     Server Processing     Content Transfer"
     );
     println!(
         "[   {:>7}  |     {:>7}    |    {:>7}    |      {:>7}      |      {:>7}     ]",
@@ -136,26 +136,26 @@ fn print_timings(timings: &HashMap<&str, f64>) {
         format_duration(timings.get("Content Transfer")),
     );
     println!(
-        "             |                |               |                   |                  |"
+        "               |                  |                 |                     |                    |"
     );
     println!(
-        "    namelookup:{:<7}        |               |                   |                  |",
+        "      namelookup:{:<7}        |                 |                     |                    |",
         format_duration(timings.get("DNS Lookup"))
     );
     println!(
-        "                        connect:{:<7}       |                   |                  |",
+        "                            connect:{:<7}       |                     |                    |",
         format_duration(timings.get("TCP Connection"))
     );
     println!(
-        "                                    pretransfer:{:<7}           |                  |",
+        "                                          pretransfer:{:<7}           |                    |",
         format_duration(timings.get("TLS Handshake"))
     );
     println!(
-        "                                                      starttransfer:{:<7}          |",
+        "                                                              starttransfer:{:<7}          |",
         format_duration(timings.get("Server Processing"))
     );
     println!(
-        "                                                                         total:{:<7}",
+        "                                                                                           total:{:<7}",
         format_duration(timings.get("Total"))
     );
 }
