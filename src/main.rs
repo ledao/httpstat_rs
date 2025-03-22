@@ -45,10 +45,8 @@ fn main() {
     }
 
     // Print HTTP response headers
-    println!("\nHTTP/1.1 {}", easy.response_code().unwrap_or(0));
-    for header in headers {
-        print!("{}", header);
-    }
+    let status_code = easy.response_code().unwrap_or(0);
+    print_headers(&headers, status_code);
 
     // Print timings
     print_timings(&timings);
@@ -175,4 +173,16 @@ fn save_body_to_file(file_path: &str, body: &[u8]) -> std::io::Result<()> {
     let mut file = File::create(file_path)?;
     file.write_all(body)?;
     Ok(())
+}
+
+fn print_headers(headers: &[String], status_code: u32) {
+    // 打印状态行
+    println!("HTTP/1.1 {}", status_code);
+
+    // 打印有效的 HTTP 响应头
+    for header in headers {
+        if let Some((key, value)) = header.split_once(':') {
+            println!("{}: {}", key.trim(), value.trim());
+        }
+    }
 }
