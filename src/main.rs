@@ -51,24 +51,14 @@ fn main() {
     // Print timings
     print_timings(&timings);
 
-    // Save response body if required
+    // Save response body directly to a file
     if show_body {
-        let mut body = Vec::new();
-        {
-            let mut transfer = easy.transfer();
-            transfer.write_function(|data| {
-                body.extend_from_slice(data);
-                Ok(data.len())
-            }).unwrap();
-            transfer.perform().expect("Failed to perform request");
-        }
-
-        let file_path = "/tmp/httpstat_body.txt";
-        if let Err(err) = save_body_to_file(file_path, &body) {
-            eprintln!("Failed to save response body: {}", err);
-        } else {
-            println!("\nBody stored in: {}", file_path);
-        }
+        let mut file = File::create("/tmp/httpstat_body.txt").expect("Failed to create file");
+        easy.write_function(move |data| {
+            file.write_all(data).expect("Failed to write data");
+            Ok(data.len())
+        }).unwrap();
+        println!("\nBody stored in: /tmp/httpstat_body.txt");
     }
 }
 
