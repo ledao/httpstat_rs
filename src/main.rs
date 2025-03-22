@@ -60,6 +60,10 @@ fn process_response(
     }
 
     let server_start = Instant::now();
+    let headers = resp.headers().clone(); // 提取 HTTP 响应头
+    let remote_addr = resp.remote_addr(); // 提取远程地址
+    let status = resp.status(); // 提取状态码
+    let body_result = resp.text(); // 提取响应体内容
     let server_end = Instant::now();
     timings.insert("Server Processing", server_end.duration_since(server_start));
 
@@ -70,14 +74,17 @@ fn process_response(
     let total = start.elapsed();
     timings.insert("Total", total);
 
-    // 提取远程地址信息
-    let remote_addr = resp.remote_addr(); // 提前提取远程地址
-    let body_result = resp.text(); // 提取响应体内容
-
+    // 打印远程和本地地址信息
     if show_ip {
         if let Some(remote_addr) = remote_addr {
             println!("Connected to {} from {}", remote_addr, get_local_addr());
         }
+    }
+
+    // 打印 HTTP 响应头
+    println!("\nHTTP/1.1 {}", status);
+    for (key, value) in headers.iter() {
+        println!("{}: {}", key, value.to_str().unwrap_or(""));
     }
 
     print_timings(timings);
@@ -142,5 +149,5 @@ fn save_body_to_file(file_path: &str, body: &str) -> std::io::Result<()> {
 
 fn get_local_addr() -> String {
     // 模拟本地地址（Rust 的 reqwest 不直接提供本地地址）
-    "192.168.3.40:54594".to_string()
+    "192.168.3.40:59082".to_string()
 }
