@@ -109,24 +109,33 @@ fn process_response(
 
 fn print_timings(timings: &HashMap<&str, Duration>) {
     println!(
-        "\n  DNS Lookup   TCP Connection   Server Processing   Content Transfer"
+        "\n   DNS Lookup     TCP Connection     Server Processing     Content Transfer"
     );
     println!(
-        "[ {:>10} | {:>10} | {:>10} | {:>10} ]",
+        "[   {:>4}  |     {:>4}    |      {:>4}      |      {:>4}     ]",
         format_duration(timings.get("DNS Lookup")),
         format_duration(timings.get("TCP Connection")),
         format_duration(timings.get("Server Processing")),
         format_duration(timings.get("Content Transfer")),
     );
     println!(
-        "             |                |                   |                  |"
+        "               |                  |                     |                    |"
     );
     println!(
-        "    namelookup:{:<10} connect:{:<10} starttransfer:{:<10} total:{:<10}",
-        format_duration(timings.get("DNS Lookup")),
-        format_duration(timings.get("TCP Connection")),
-        format_duration(timings.get("Server Processing")),
-        format_duration(timings.get("Total")),
+        "      namelookup:{:<4}        |                     |                    |",
+        format_duration(timings.get("DNS Lookup"))
+    );
+    println!(
+        "                            connect:{:<4}           |                    |",
+        format_duration(timings.get("TCP Connection"))
+    );
+    println!(
+        "                                            starttransfer:{:<4}          |",
+        format_duration(timings.get("Server Processing"))
+    );
+    println!(
+        "                                                                         total:{:<4}",
+        format_duration(timings.get("Total"))
     );
 }
 
