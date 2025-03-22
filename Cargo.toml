@@ -10,7 +10,7 @@ homepage = "https://github.com/ledao/httpstat_rs"
 documentation = "https://docs.rs/httpstat_rs"
 keywords = ["http", "cli", "httpstat", "timing", "curl"]
 categories = ["command-line-utilities", "network-programming"]
-readme = "README.md"
+readme = "README.MD"
 
 [dependencies]
 curl = "0.4"
